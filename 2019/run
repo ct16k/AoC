@@ -1,0 +1,59 @@
+#!/bin/sh
+
+usage () {
+    echo "usage: run [-t | --time] [-o | --timeopts [lp]] [-a | --args <additional_runtime_args>] <day_to_run> [input_files] | [-h | --help this help message]"
+}
+
+timecmd=""
+timeopts=""
+args=""
+day=""
+inputs=""
+while [ "$1" != "" ]; do
+    case $1 in
+        -t | --time )
+            timecmd="/usr/bin/time"
+            ;;
+        -o | --timeopts )
+            shift
+            timecmd="/usr/bin/time"
+            timeopts="-${1}"
+            ;;
+        -a | --args )
+            shift
+            args="$1"
+            ;;
+        -h | --help )
+            usage
+            exit
+            ;;
+        * )
+           if [ -z "$day" ]; then
+               day="${1//day/}"
+           else
+               inputs="${inputs} ${1//,/ }"
+           fi
+    esac
+    shift
+done
+
+if [ -z "$day" ]; then
+    echo "No day to run"
+    exit 1
+fi
+
+cmdname="day${day}/day${day}"
+if [ ! -x "$cmdname" ]; then
+    echo "Day ${day} not available"
+    exit 1
+fi
+
+if [ -z "$inputs" ]; then
+    echo "Running day ${day} from standard input:"
+    $timecmd $timeopts $cmdname $args
+else
+    for input in $inputs; do
+        echo "Running day ${day} for ${input}:"
+        $timecmd $timeopts $cmdname $args < $input
+    done
+fi

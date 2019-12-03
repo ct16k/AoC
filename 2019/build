@@ -1,0 +1,48 @@
+#!/bin/sh
+
+usage () {
+    /bin/echo "usage: build [-c | --create <days_to_bootstrap>] | [-d | --days <days_to_build>] [-f | --flags <go_build_flags>] | [-h | --help this help message]"
+}
+
+create () {
+    for i in $1; do
+        i="${i//day/}"
+        /bin/echo -n "bootstrapping day ${i}:"
+        cp -a skel "day${i}" && echo "OK"
+    done
+}
+
+days="day*"
+flags=""
+while [ "$1" != "" ]; do
+    case $1 in
+        -c | --create )
+            shift
+            create "${1//,/ }"
+            exit
+            ;;
+        -d | --days )
+            shift
+            days="${1//,/ }"
+            ;;
+        -f | --flags )
+            shift
+            flags="$1"
+            ;;
+        -h | --help )
+            usage
+            exit
+            ;;
+    esac
+    shift
+done
+
+curdir=${PWD}
+for i in $days; do
+    i="${i//day/}"
+    dir="${curdir}/day${i}"
+    /bin/echo -n "building day ${i}: "
+    cd "$dir" &&
+    go build $flags &&
+    echo "OK"
+done
